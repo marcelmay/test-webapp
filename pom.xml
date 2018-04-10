@@ -66,8 +66,8 @@
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-runner</artifactId>
-            <version>9.2.24.v20180105</version>
-            <scope>test</scope>
+            <version>9.4.9.v20180320</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
@@ -235,66 +235,55 @@
                             <autoPull>true</autoPull>
                             <images>
                                 <image>
-                                    <name>marcelmay/hadoop-hdfs-fsimage-exporter</name>
+                                    <name>marcelmay/test-webapp</name>
                                     <build>
                                         <from>openjdk:8u151-jre-alpine3.7</from>
-                                        <maintainer>https://github.com/marcelmay/hadoop-hdfs-fsimage-exporter
-                                        </maintainer>
+                                        <maintainer>https://github.com/marcelmay/test-webapp</maintainer>
+                                        <runCmds>
+                                            <runCmd>addgroup test-webapp</runCmd>
+                                            <runCmd>adduser -G test-webapp -D test-webapp</runCmd>
+                                        </runCmds>
+                                        <user>test-webapp</user>
                                         <tags>
                                             <tag>latest</tag>
                                             <tag>${project.version}</tag>
                                         </tags>
                                         <ports>
-                                            <port>7772</port>
+                                            <port>8080</port>
                                         </ports>
-                                        <volumes>
-                                            <volume>/fsimage-location</volume>
-                                        </volumes>
                                         <buildOptions>
                                             <shmsize>2147483648</shmsize>
                                         </buildOptions>
                                         <env>
-                                            <JAVA_OPTS>-server -dsa -da -XX:+UseG1GC -Xmx1024m</JAVA_OPTS>
+                                            <JAVA_OPTS>-server -Xmx128m</JAVA_OPTS>
                                         </env>
-                                        <entryPoint>
-                                            <!-- exec form for ENTRYPOINT -->
-                                            <exec>
-                                                <arg>/bin/sh</arg>
-                                                <arg>-c</arg>
-                                                <arg>java $JAVA_OPTS -jar /opt/fsimage-exporter/fsimage-exporter.jar \
-                                                    0.0.0.0 7772 /opt/fsimage-exporter/fsimage-exporter-config.yml
-                                                </arg>
-                                            </exec>
-                                        </entryPoint>
+                                        <entryPoint>cd /home/test-webapp &amp;&amp; java $JAVA_OPTS -jar jetty-runner.war --port 8080 --host 0.0.0.0 --path / test-demo.war</entryPoint>
                                         <assembly>
                                             <mode>dir</mode>
-                                            <targetDir>/opt/fsimage-exporter</targetDir>
+                                            <targetDir>/home/test-webapp</targetDir>
                                             <inline>
                                                 <dependencySets>
                                                     <dependencySet>
                                                         <includes>
                                                             <include>${project.groupId}:${project.artifactId}</include>
                                                         </includes>
-                                                        <outputFileNameMapping>fsimage-exporter.jar
-                                                        </outputFileNameMapping>
+                                                        <outputFileNameMapping>test-demo.war</outputFileNameMapping>
+                                                    </dependencySet>
+                                                    <dependencySet>
+                                                        <scope>provided</scope>
+                                                        <includes>
+                                                            <include>org.eclipse.jetty:jetty-runner</include>
+                                                        </includes>
+                                                        <outputFileNameMapping>jetty-runner.war</outputFileNameMapping>
                                                     </dependencySet>
                                                 </dependencySets>
-                                                <files>
-                                                    <file>
-                                                        <source>fsimage-docker.yml</source>
-                                                        <destName>fsimage-exporter-config.yml</destName>
-                                                    </file>
-                                                </files>
                                             </inline>
                                         </assembly>
                                     </build>
                                     <run>
                                         <ports>
-                                            <port>7772:7772</port>
+                                            <port>8080:8080</port>
                                         </ports>
-                                        <volumes>
-                                            <bind>${basedir}/src/test/resources:/fsimage-location</bind>
-                                        </volumes>
                                     </run>
                                 </image>
                             </images>
